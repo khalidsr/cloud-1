@@ -1,0 +1,22 @@
+- hosts: "*"
+  become: true
+  tasks:
+    - name: Create project directory
+      file:
+        path: /usr/src/app
+        state: directory
+
+    - name: Copy Docker Compose file
+      copy:
+        src: ./inception
+        dest: /usr/src/app/
+
+    - name: Pull and start Docker Compose services
+      command: make 
+
+    - name: Verify Docker Compose is running
+      command: make ps
+      register: result
+
+    - debug:
+        var: result.stdout
