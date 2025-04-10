@@ -1,0 +1,82 @@
+---
+- hosts: all
+  become: true
+  vars:
+    default_container_name: docker
+    default_container_image: ubuntu
+    default_container_command: sleep 1d
+
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - vim 
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+
+    - name: Ensure Docker service is running
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user to Docker group
+      become: true
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    - name: Copy .env file
+      ansible.builtin.copy:
+        src: .env
+        dest: inception
+    
+    - name: Create {{ ansible_env.HOME }}/data directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ ansible_env.HOME }}/data/WordPress"
+        - "{{ ansible_env.HOME }}/data/DB"
+        - "{{ ansible_env.HOME }}/data/phpmyadmin"
+    
+    - name: Start docker-compose
+      environment:
+        HOSTNAME: "{{ inventory_hostname }}"
+      community.docker.docker_compose_v2:
+        project_src: ./inception
+        build: "always"
+    
+    - debug:
+        var: result.stdout

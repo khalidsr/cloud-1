@@ -62,13 +62,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: "${HOME}/data/mariadb"
+      device: "${HOME}/Desktop/cloud/cloud-1-main/inception/data/mariadb"
       o: bind
   data_wordpress:
     driver: local
     driver_opts:
       type: none
-      device: "${HOME}/data/wordpress"
+      device: "${HOME}/Desktop/cloud/cloud-1-main/inception/data/wordpress"
       o: bind
 
 networks:
