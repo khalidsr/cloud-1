@@ -1,0 +1,76 @@
+services:
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    depends_on:
+      - wordpress
+      - phpmyadmin
+    ports:
+      - 8443:443
+      - 443:443
+    volumes:
+      - data_wordpress:/var/www/html
+    restart: always
+    networks:
+      - inception-network
+
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+      args:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - data_mariadb:/var/lib/mysql
+    networks:
+      - inception-network
+    restart: always
+    env_file:
+      - .env
+
+  wordpress:
+    container_name: wordpress
+    depends_on:
+      - mariadb
+    build:
+      context: ./requirements/wordpress
+    restart: always
+    env_file:
+      - .env
+    environment:
+      HOSTNAME: ${HOSTNAME}
+    volumes:
+      - data_wordpress:/var/www/html
+    networks:
+      - inception-network
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_ABSOLUTE_URI: https://${HOSTNAME}/phpmyadmin/
+    depends_on:
+      - mariadb
+    networks:
+      - inception-network
+
+volumes:
+  data_mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${HOME}/data/mariadb"
+      o: bind
+  data_wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${HOME}/data/wordpress"
+      o: bind
+
+networks:
+  inception-network:
+    driver: bridge

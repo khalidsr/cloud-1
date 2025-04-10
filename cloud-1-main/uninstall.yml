@@ -1,0 +1,61 @@
+- name: Teardown and clean up inception
+  hosts: all
+
+  tasks:
+    - name: Stop docker-compose services
+      community.docker.docker_compose_v2:
+        project_src: ./inception
+        state: absent
+        remove_orphans: true
+        remove_volumes: true
+        remove_images: all
+
+    - name: Docker prune everything
+      community.docker.docker_prune:
+        containers: true
+        images: true
+        images_filters:
+          dangling: false
+        networks: true
+        volumes: true
+        builder_cache: true
+
+    - name: Stop Docker service
+      become: true
+      service:
+        name: docker
+        state: stopped
+
+    - name: Remove Docker packages
+      become: true
+      apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: absent
+        purge: yes
+
+    - name: Remove Docker GPG apt Key
+      become: true
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: absent
+
+    - name: Remove Docker Repository
+      become: true
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: absent
+
+    - name: Delete Inception directory
+      ansible.builtin.file:
+        path: inception
+        state: absent
+
+    - name: Delete data directory
+      become: true
+      ansible.builtin.file:
+        path: data
+        state: absent
