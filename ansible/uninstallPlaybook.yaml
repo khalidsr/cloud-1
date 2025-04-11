@@ -1,0 +1,70 @@
+---
+- name: clean and uninstall dependencies
+- hosts: all
+  become: true
+  tasks:
+
+    - name: Stop Docker service
+      community.docker.docker_compose_v2:
+        project_src: ./inception
+        state: absent
+        remove_orphans: true
+        remove_volumes: true
+        remove_images: all
+
+    - name: Docker prune everything
+      community.docker.docker_prune:
+            containers: true
+            images: true
+            images_filters:
+              dangling: false
+            networks: true
+            volumes: true
+            builder_cache: true
+
+    - name: Remove Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: absent
+
+    - name: Remove any unused dependencies
+      apt:
+        autoremove: yes
+        purge: yes
+        state: latest
+
+    - name: Remove Docker Compose
+      apt:
+        name: docker-compose
+        state: absent
+
+    - name: Remove Docker Compose binary
+      file:
+        path: /usr/local/bin/docker-compose
+        state: absent
+
+  
+    - name: Remove Docker directories
+      file:
+        path: "{{ item }}"
+        state: absent
+        recurse: yes
+      with_items:
+        - /var/lib/docker
+        - /etc/docker
+        - /var/run/docker
+        - /root/.docker
+
+    - name: Remove Docker GPG key
+      apt_key:
+        id: 7EA0A9C3F273FCD8
+        state: absent
+
+    - name: Remove Docker apt repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: absent
+

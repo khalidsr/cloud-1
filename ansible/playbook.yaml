@@ -1,6 +1,9 @@
 ---
-- hosts: all
+- hosts: localhost
   become: true
+  collections:
+  - community.docker
+
   vars:
     default_container_name: docker
     default_container_image: ubuntu
@@ -49,7 +52,7 @@
         name: docker
         state: started
         enabled: yes
-
+   
     - name: Add current user to Docker group
       become: true
       user:
@@ -60,7 +63,7 @@
     - name: Copy .env file
       ansible.builtin.copy:
         src: .env
-        dest: inception
+        dest: ../inception
     
     - name: Create {{ ansible_env.HOME }}/data directory
       file:
@@ -70,13 +73,24 @@
         - "{{ ansible_env.HOME }}/data/WordPress"
         - "{{ ansible_env.HOME }}/data/DB"
         - "{{ ansible_env.HOME }}/data/phpmyadmin"
+
+    - name: Install docker-compose Python package
+      pip:
+        name: docker-compose
+        state: present
     
     - name: Start docker-compose
       environment:
         HOSTNAME: "{{ inventory_hostname }}"
       community.docker.docker_compose_v2:
-        project_src: ./inception
+        project_src: "{{ ansible_env.HOME }}/cloud-1/inception"
         build: "always"
     
+    - name: Run docker compose manually
+      ansible.builtin.command:
+        cmd: docker compose up -d --build
+        chdir: ../inception
+
     - debug:
         var: result.stdout
+
