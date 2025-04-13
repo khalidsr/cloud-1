@@ -56,7 +56,7 @@
     - name: Add current user to Docker group
       become: true
       user:
-        name: "{{ ansible_user }}"
+        name: "{{ ansible_user_id }}"
         groups: docker
         append: true
 
@@ -70,26 +70,24 @@
         path: "{{ item }}"
         state: directory
       with_items:
-        - "{{ ansible_env.HOME }}/data/WordPress"
-        - "{{ ansible_env.HOME }}/data/DB"
+        - "{{ ansible_env.HOME }}/data/wordpress"
+        - "{{ ansible_env.HOME }}/data/mariadb"
         - "{{ ansible_env.HOME }}/data/phpmyadmin"
 
-    - name: Install docker-compose Python package
-      pip:
-        name: docker-compose
-        state: present
-    
-    - name: Start docker-compose
-      environment:
-        HOSTNAME: "{{ inventory_hostname }}"
+    - name: Install Docker Compose V2 plugin
+      apt:
+        name: docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: Start docker-compose (V2)
       community.docker.docker_compose_v2:
-        project_src: "{{ ansible_env.HOME }}/cloud-1/inception"
-        build: "always"
-    
-    - name: Run docker compose manually
-      ansible.builtin.command:
-        cmd: docker compose up -d --build
-        chdir: ../inception
+        project_src: "/root/cloud-1/inception"  # Absolute path recommended
+        build: "always"  # Correct value type
+        pull: "always"  # Optional: ensure latest images
+        recreate: "always"  # Optional: recreate containers
+        remove_orphans: yes  # Optional: clean up unused services
+      register: compose_output
 
     - debug:
         var: result.stdout

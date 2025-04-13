@@ -1,4 +1,3 @@
-version: '3'
 
 services:
   nginx:
@@ -51,6 +50,8 @@ services:
   phpmyadmin:
     image: phpmyadmin:5.2.1
     container_name: phpmyadmin
+    ports:
+      - "8080:80"
     environment:
       PMA_HOST: mariadb
       PMA_ABSOLUTE_URI: https://${HOSTNAME}/phpmyadmin/
@@ -64,13 +65,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: "${HOME}/Desktop/cloud/cloud-1-main/inception/data/mariadb"
+      device: "/root/data/mariadb"
       o: bind
   data_wordpress:
     driver: local
     driver_opts:
       type: none
-      device: "${HOME}/Desktop/cloud/cloud-1-main/inception/data/wordpress"
+      device: "/root/data/wordpress"
       o: bind
 
 networks:
