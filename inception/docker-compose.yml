@@ -47,18 +47,23 @@ services:
     networks:
       - inception-network
 
-  phpmyadmin:
+    phpmyadmin:
     image: phpmyadmin:5.2.1
     container_name: phpmyadmin
     ports:
       - "8080:80"
     environment:
       PMA_HOST: mariadb
-      PMA_ABSOLUTE_URI: https://${HOSTNAME}/phpmyadmin/
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      # PMA_ABSOLUTE_URI: https://${HOSTNAME}/phpmyadmin/
     depends_on:
       - mariadb
     networks:
       - inception-network
+    env_file:
+      - .env
+
 
 volumes:
   data_mariadb:
