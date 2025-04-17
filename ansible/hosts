@@ -1,5 +1,5 @@
-# hosts
+
 [webservers]
-167.99.42.188 ansible_user=root hostname=167.99.42.188
-144.126.235.176  ansible_user=root hostname=144.126.235.176
+138.68.133.167 ansible_user=root hostname=138.68.133.167 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+139.59.181.168  ansible_user=root hostname=139.59.181.168 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
