@@ -1,96 +1,16 @@
 ---
-- hosts: webservers
+- name: Deploy Inception Project
+  hosts: webservers
   become: true
-  vars:
-    inception_local_path: "../inception"   
-    inception_remote_path: "/inception"
   vars_files:
-      - secrets.yml
-  tasks:
-    - name: Install system packages
-      apt:
-        pkg:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-          - python3-pip
-        state: latest
-        update_cache: true
+    - vars/secrets.yml
+  vars:
+    - inception_local_path: "../inception"
+    - inception_remote_path: "/inception"
 
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repo
-      apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu focal stable
-        state: present
-
-    - name: Install Docker and Compose plugin
-      apt:
-        name:
-          - docker-ce
-          - docker-compose-plugin
-        state: latest
-        update_cache: true
-
-    - name: Ensure Docker service is running
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Add current user to Docker group
-      user:
-        name: "{{ ansible_user_id }}"
-        groups: docker
-        append: yes
-    - name: Create {{ ansible_env.HOME }}/data directory
-      file:
-        path: "{{ item }}"
-        state: directory
-      with_items:
-        - "{{ ansible_env.HOME }}/data/wordpress"
-        - "{{ ansible_env.HOME }}/data/mariadb"
-        - "{{ ansible_env.HOME }}/data/phpmyadmin"
-
-    - name: Copy contents of inception folder to remote
-      copy:
-        src: "{{ inception_local_path }}/"
-        dest: "{{ inception_remote_path }}/"
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Generate .env file from template
-      template:
-        src: "env.j2"
-        dest: "{{ inception_remote_path }}/.env"
-        owner: root
-        group: root
-        mode: '0600' 
-
-    - name: Verify docker-compose.yml file exists in the remote folder
-      stat:
-        path: "{{ inception_remote_path }}/docker-compose.yml"
-      register: docker_compose_file
-
-    - name: Fail if docker-compose.yml is not present
-      fail:
-        msg: "The docker-compose.yml file does not exist in the inception folder on the remote machine."
-      when: not docker_compose_file.stat.exists
-
-    - name: Run docker-compose
-      community.docker.docker_compose_v2:
-        project_src: "{{ inception_remote_path }}"
-        build: always
-        pull: always
-        recreate: always
-        remove_orphans: yes
-      register: compose_output
-
-    - name: Show docker-compose logs
-      debug:
-        var: compose_output
+  roles:
+    - common
+    - mariadb
+    - wordpress
+    - phpmyadmin
+    - nginx

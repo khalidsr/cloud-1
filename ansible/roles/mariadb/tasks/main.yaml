@@ -1,0 +1,25 @@
+- name: Create mariadb data directory
+  file:
+    path: "{{ ansible_env.HOME }}/data/mariadb"
+    state: directory
+
+- name: Copy inception project
+  copy:
+    src: "{{ inception_local_path }}/"
+    dest: "{{ inception_remote_path }}/"
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Generate .env file from template
+  template:
+    src: env.j2
+    dest: "/inception/.env"
+    mode: '0600'
+
+- name: Start mariadb with docker-compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ inception_remote_path }}"
+    services:
+      - mariadb
+    build: "always"
