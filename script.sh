@@ -42,4 +42,4 @@ echo "Inventory generated:"
 cat $INVENTORY_FILE
 
 echo "Running Ansible playbook..."
-ansible-playbook -i $INVENTORY_FILE ./ansible/Playbook.yaml --vault-password-file=./ansible/vars/vault_pass.txt
+ansible-playbook -i $INVENTORY_FILE ./ansible/Playbook.yaml --vault-password-file=./ansible/vars/.vault_pass.txt
